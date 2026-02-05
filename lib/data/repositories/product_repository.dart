@@ -1,34 +1,70 @@
-import 'package:offline_first_design/data/mapper/product_mapper.dart';
-import 'package:offline_first_design/entities/product.dart';
-import 'package:offline_first_design/infrastructures/api_service_interface.dart';
-import 'package:offline_first_design/infrastructures/misc/endpoints.dart';
+// data/repositories/product_repository_impl.dart
+import 'package:offline_first_design/core/network/network_info.dart';
+import 'package:offline_first_design/core/results/results.dart';
+import 'package:offline_first_design/data/datasources/product_local_ds.dart';
+import 'package:offline_first_design/data/datasources/product_remote_ds.dart';
+import 'package:offline_first_design/domain/repositories/product_repository_interface.dart';
+import 'package:offline_first_design/domain/entities/product.dart';
 
-class ProductRepository {
-  ProductRepository(
-    ApiServiceInterface service,
-    Endpoints endpoints,
-    ProductMapper mapper,
-  ) {
-    _service = service;
-    _endpoints = endpoints;
-    _mapper = mapper;
+import '../../core/error/error_mapper.dart';
+import '../models/product_model.dart';
+
+class ProductRepository implements ProductRepositoryInterface {
+  final ProductRemoteDataSource remote;
+  final ProductLocalDataSource local;
+  final NetworkInfo networkInfo;
+
+  ProductRepository(this.remote, this.local, this.networkInfo);
+
+  @override
+  Future<Result<List<Product>>> getProducts() async {
+    try {
+      if (await networkInfo.isConnected) {
+        // ONLINE
+        final products = await remote.getProducts();
+
+        await local.cacheProducts(
+          products.map(ProductModel.fromEntity).toList(),
+        );
+
+        return Result.success(products);
+      } else {
+        // OFFLINE
+        final cached = await local.getCachedProducts();
+        return Result.success(cached.map((e) => e.toEntity()).toList());
+      }
+    } catch (e) {
+      return Result.failure(ErrorMapper.map(e));
+    }
   }
 
-  late ApiServiceInterface _service;
-  late Endpoints _endpoints;
-  late ProductMapper _mapper;
-
-  Future<List<Product>> getProducts(Map<String, String> params) async {
-    dynamic resp;
+  @override
+  Future<Result<Product>> getProductById(int id) async {
     try {
-      await Future.delayed(Duration(milliseconds: 300));
-      resp = await _service.invokeHttpList(
-        _endpoints.product(),
-        RequestType.get,
-      );
-    } catch (error) {
-      rethrow;
+      final model = await local.getProductById(id);
+      return Result.success(model.toEntity());
+    } catch (e) {
+      return Result.failure(ErrorMapper.map(e));
     }
-    return _mapper.getProducts(resp);
+  }
+
+  @override
+  Future<Result<void>> saveLocalProducts(List<Product> products) async {
+    try {
+      await local.cacheProducts(products.map(ProductModel.fromEntity).toList());
+      return Result.success(null);
+    } catch (e) {
+      return Result.failure(ErrorMapper.map(e));
+    }
+  }
+
+  @override
+  Future<Result<void>> clearLocalCache() async {
+    try {
+      await local.clear();
+      return Result.success(null);
+    } catch (e) {
+      return Result.failure(ErrorMapper.map(e));
+    }
   }
 }

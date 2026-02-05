@@ -1,50 +1,44 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:offline_first_design/infrastructures/app_components.dart';
-import 'package:offline_first_design/infrastructures/misc/utils.dart';
-import './infrastructures/misc/router.dart' as custom_router;
-import 'infrastructures/misc/pages.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:offline_first_design/data/models/product_model.dart';
+import 'package:offline_first_design/domain/usecases/get_products_usecase.dart';
+import 'package:offline_first_design/presentation/product/product_page.dart';
+import 'package:offline_first_design/presentation/product/product_provider.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runZonedGuarded<Future<void>>(
-    () async {
-      Future.wait([_initFabric(), AppComponents.init()]).then((_) {
-        runApp(MyApp()); // run app
-      });
-    },
-    ((error, stackTrace) {
-      debugPrint('NOTIF ERROR\nDETAIL: $error\nSTACKTRACE: $stackTrace');
-    }),
-  );
-}
+import 'core/di/service_locator.dart';
 
-Future<void> _initFabric() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Hive.initFlutter();
+  Hive.registerAdapter(ProductModelAdapter());
+
+  await initDI();
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final custom_router.Router _router;
-
-  MyApp({super.key}) : _router = custom_router.Router();
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: Utils.navigatorKey,
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.light().copyWith(scaffoldBackgroundColor: Colors.white),
-      title: '100 Days with Flutter',
-      onGenerateRoute: (settings) {
-        return _router.getRoute(settings);
-      },
-      initialRoute: Pages.home,
-      builder: (context, child) {
-        return Padding(
-          padding: EdgeInsets.only(top: MediaQuery.of(context).viewInsets.top),
-          child: child,
-        );
-      },
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<ProductProvider>(
+          create: (_) => ProductProvider(sl<GetProductsUsecase>()),
+        ),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Product App',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          useMaterial3: true,
+        ),
+        home: const ProductPage(),
+      ),
     );
   }
 }

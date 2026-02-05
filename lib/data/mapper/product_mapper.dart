@@ -1,6 +1,6 @@
 import 'dart:developer';
 
-import 'package:offline_first_design/entities/product.dart';
+import 'package:offline_first_design/domain/entities/product.dart';
 
 class ProductMapper {
   List<Product> getProducts(List<dynamic> json) {
