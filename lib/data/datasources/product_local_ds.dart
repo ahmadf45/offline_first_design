@@ -1,21 +1,11 @@
-// data/datasources/product_local_datasource.dart
 import 'package:hive_ce/hive.dart';
 import 'package:offline_first_design/core/error/exceptions.dart';
 import 'package:offline_first_design/data/models/product_model.dart';
 
 abstract class ProductLocalDataSourceInterface {
-  /// Get all cached products
-  /// Throws [CacheException] if empty
   Future<List<ProductModel>> getCachedProducts();
-
-  /// Get single product from cache
-  /// Throws [CacheException] if not found
   Future<ProductModel> getProductById(int id);
-
-  /// Save products to cache (replace all)
   Future<void> cacheProducts(List<ProductModel> products);
-
-  /// Clear all cached data
   Future<void> clear();
 }
 

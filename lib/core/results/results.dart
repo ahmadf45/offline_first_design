@@ -1,4 +1,3 @@
-// core/result/result.dart
 import '../error/failure.dart';
 
 class Result<T> {

@@ -8,10 +8,10 @@ class ProductProvider extends ChangeNotifier {
   final GetProductsUsecase getProducts;
 
   ProductProvider(this.getProducts) {
-    loadProducts(); // 👈 init-like behavior
+    loadProducts(); // init state
   }
 
-  bool isLoading = false;
+  bool isLoading = true;
   String? error;
   List<Product> products = [];
 

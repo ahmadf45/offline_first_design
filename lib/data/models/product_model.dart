@@ -1,4 +1,3 @@
-// data/models/product_model.dart
 import 'package:hive_ce/hive.dart';
 import 'package:offline_first_design/domain/entities/product.dart';
 
@@ -33,10 +32,10 @@ class ProductModel extends HiveObject {
     required this.updatedAt,
   });
 
-  // 👇 JSON → Model (API)
+  // JSON → Model (API)
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     return ProductModel(
-      id: json['id'] as int,
+      id: json['ids'] is int ? json['ids'] : int.tryParse(json['id']) ?? 0,
       name: json['name'] as String,
       price: json['price'] as int,
       status: json['status'] as String,
@@ -45,10 +44,10 @@ class ProductModel extends HiveObject {
     );
   }
 
-  // 👇 Model → JSON (optional, for sync/upload)
+  // Model → JSON (optional, for sync/upload)
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'id': id.toString(),
       'name': name,
       'price': price,
       'status': status,

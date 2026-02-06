@@ -1,4 +1,3 @@
-// core/error/error_mapper.dart
 import 'exceptions.dart';
 import 'failure.dart';
 
